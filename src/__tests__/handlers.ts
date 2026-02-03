@@ -77,6 +77,15 @@ export const mockSubscriber = {
   stripe_customer: null,
 };
 
+export const mockTag = {
+  id: "tag_abc123",
+  creation_date: "2024-01-01T00:00:00Z",
+  name: "Newsletter",
+  color: "#FFD700",
+  description: "Main newsletter subscribers",
+  secondary_id: 1,
+};
+
 export const handlers = [
   // List emails
   http.get(`${API_BASE}/emails`, ({ request }) => {
@@ -154,7 +163,7 @@ export const handlers = [
     return HttpResponse.json(mockAnalytics);
   }),
 
-  // List subscribers
+// List subscribers
   http.get(`${API_BASE}/subscribers`, ({ request }) => {
     const url = new URL(request.url);
     const type = url.searchParams.get("type");
@@ -186,5 +195,62 @@ export const handlers = [
       id: isEmail ? mockSubscriber.id : idOrEmail,
       email_address: isEmail ? idOrEmail : mockSubscriber.email_address,
     });
+  }),
+
+  // List tags
+  http.get(`${API_BASE}/tags`, () => {
+    return HttpResponse.json({
+      count: 2,
+      next: null,
+      previous: null,
+      results: [mockTag, { ...mockTag, id: "tag_def456", name: "Premium" }],
+    });
+  }),
+
+  // Get single tag
+  http.get(`${API_BASE}/tags/:id`, ({ params }) => {
+    const { id } = params;
+
+    if (id === "tag_notfound") {
+      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    }
+
+    return HttpResponse.json({ ...mockTag, id });
+  }),
+
+  // Create tag
+  http.post(`${API_BASE}/tags`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+
+    return HttpResponse.json({
+      ...mockTag,
+      id: "tag_new123",
+      name: body.name,
+      color: body.color || mockTag.color,
+      description: body.description || mockTag.description,
+    });
+  }),
+
+  // Update tag
+  http.patch(`${API_BASE}/tags/:id`, async ({ params, request }) => {
+    const { id } = params;
+    const body = (await request.json()) as Record<string, unknown>;
+
+    return HttpResponse.json({
+      ...mockTag,
+      id,
+      ...body,
+    });
+  }),
+
+  // Delete tag
+  http.delete(`${API_BASE}/tags/:id`, ({ params }) => {
+    const { id } = params;
+
+    if (id === "tag_notfound") {
+      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    }
+
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

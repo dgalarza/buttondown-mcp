@@ -149,7 +149,7 @@ export function createServer() {
     }
   );
 
-  // list_subscribers tool
+// list_subscribers tool
   server.tool(
     "list_subscribers",
     "List subscribers from your Buttondown newsletter. Filter by subscriber type.",
@@ -179,7 +179,21 @@ export function createServer() {
     }
   );
 
-  // get_subscriber tool
+  // list_tags tool
+  server.tool(
+    "list_tags",
+    "List all tags in your Buttondown newsletter",
+    {
+      page: z.number().optional().describe("Page number for pagination"),
+    },
+    async ({ page }) => {
+      const client = new ButtondownClient(getApiKey());
+      const response = await client.listTags(page);
+      return jsonResponse(response);
+    }
+  );
+
+// get_subscriber tool
   server.tool(
     "get_subscriber",
     "Get detailed information about a specific subscriber by ID or email address",
@@ -192,6 +206,72 @@ export function createServer() {
       const client = new ButtondownClient(getApiKey());
       const subscriber = await client.getSubscriber(id_or_email);
       return jsonResponse(subscriber);
+    }
+  );
+
+  // get_tag tool
+  server.tool(
+    "get_tag",
+    "Get detailed information about a specific tag",
+    {
+      id: z.string().describe("The tag ID"),
+    },
+    async ({ id }) => {
+      const client = new ButtondownClient(getApiKey());
+      const tag = await client.getTag(id);
+      return jsonResponse(tag);
+    }
+  );
+
+  // create_tag tool
+  server.tool(
+    "create_tag",
+    "Create a new tag to organize subscribers",
+    {
+      name: z.string().describe("The name of the tag"),
+      color: z
+        .string()
+        .optional()
+        .describe("Hex color code for the tag (e.g., #FFD700)"),
+      description: z.string().optional().describe("A description of the tag"),
+    },
+    async ({ name, color, description }) => {
+      const client = new ButtondownClient(getApiKey());
+      const tag = await client.createTag(name, { color, description });
+      return jsonResponse(tag);
+    }
+  );
+
+  // update_tag tool
+  server.tool(
+    "update_tag",
+    "Update an existing tag",
+    {
+      id: z.string().describe("The tag ID to update"),
+      name: z.string().optional().describe("New name for the tag"),
+      color: z.string().optional().describe("New hex color code for the tag"),
+      description: z.string().optional().describe("New description for the tag"),
+    },
+    async ({ id, name, color, description }) => {
+      const client = new ButtondownClient(getApiKey());
+      const tag = await client.updateTag(id, { name, color, description });
+      return jsonResponse(tag);
+    }
+  );
+
+  // delete_tag tool
+  server.tool(
+    "delete_tag",
+    "Delete a tag (subscribers with this tag will not be deleted)",
+    {
+      id: z.string().describe("The tag ID to delete"),
+    },
+    async ({ id }) => {
+      const client = new ButtondownClient(getApiKey());
+      await client.deleteTag(id);
+      return {
+        content: [{ type: "text" as const, text: `Tag ${id} deleted successfully` }],
+      };
     }
   );
 

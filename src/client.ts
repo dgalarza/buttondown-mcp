@@ -75,6 +75,15 @@ export interface ButtondownSubscriber {
   stripe_customer: unknown | null;
 }
 
+export interface ButtondownTag {
+  id: string;
+  creation_date: string;
+  name: string;
+  color: string;
+  description: string;
+  secondary_id: number;
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
@@ -108,6 +117,11 @@ export class ButtondownClient {
       throw new Error(
         `Buttondown API error (${response.status}): ${errorText}`
       );
+    }
+
+    // Handle 204 No Content responses
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return response.json() as Promise<T>;
@@ -192,7 +206,7 @@ export class ButtondownClient {
     return this.request<EmailAnalytics>(`/emails/${id}/analytics`);
   }
 
-  async listSubscribers(
+async listSubscribers(
     page?: number,
     type?: string
   ): Promise<PaginatedResponse<ButtondownSubscriber>> {
@@ -210,5 +224,55 @@ export class ButtondownClient {
     return this.request<ButtondownSubscriber>(
       `/subscribers/${encodeURIComponent(idOrEmail)}`
     );
+  }
+
+  async listTags(page?: number): Promise<PaginatedResponse<ButtondownTag>> {
+    const params = new URLSearchParams();
+    if (page) params.append("page", page.toString());
+
+    const query = params.toString();
+    return this.request<PaginatedResponse<ButtondownTag>>(
+      `/tags${query ? `?${query}` : ""}`
+    );
+  }
+
+  async getTag(id: string): Promise<ButtondownTag> {
+    return this.request<ButtondownTag>(`/tags/${id}`);
+  }
+
+  async createTag(
+    name: string,
+    options?: {
+      color?: string;
+      description?: string;
+    }
+  ): Promise<ButtondownTag> {
+    return this.request<ButtondownTag>("/tags", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        ...options,
+      }),
+    });
+  }
+
+  async updateTag(
+    id: string,
+    updates: {
+      name?: string;
+      color?: string;
+      description?: string;
+    }
+  ): Promise<ButtondownTag> {
+    return this.request<ButtondownTag>(`/tags/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteTag(id: string): Promise<void> {
+    await this.request<void>(`/tags/${id}`, {
+      method: "DELETE",
+    });
   }
 }
