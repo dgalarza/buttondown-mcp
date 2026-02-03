@@ -149,5 +149,51 @@ export function createServer() {
     }
   );
 
+  // list_subscribers tool
+  server.tool(
+    "list_subscribers",
+    "List subscribers from your Buttondown newsletter. Filter by subscriber type.",
+    {
+      page: z.number().optional().describe("Page number for pagination"),
+      type: z
+        .enum([
+          "regular",
+          "unactivated",
+          "unpaid",
+          "premium",
+          "gifted",
+          "churned",
+          "past_due",
+          "trialed",
+          "removed",
+          "spam_complaint",
+          "undeliverable",
+        ])
+        .optional()
+        .describe("Filter subscribers by type"),
+    },
+    async ({ page, type }) => {
+      const client = new ButtondownClient(getApiKey());
+      const response = await client.listSubscribers(page, type);
+      return jsonResponse(response);
+    }
+  );
+
+  // get_subscriber tool
+  server.tool(
+    "get_subscriber",
+    "Get detailed information about a specific subscriber by ID or email address",
+    {
+      id_or_email: z
+        .string()
+        .describe("The subscriber ID (UUID) or email address"),
+    },
+    async ({ id_or_email }) => {
+      const client = new ButtondownClient(getApiKey());
+      const subscriber = await client.getSubscriber(id_or_email);
+      return jsonResponse(subscriber);
+    }
+  );
+
   return server;
 }
