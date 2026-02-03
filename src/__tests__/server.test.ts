@@ -153,4 +153,50 @@ describe("MCP Server", () => {
       expect(data.clicks).toBe(25);
     });
   });
+
+  describe("list_subscribers tool", () => {
+    it("lists all subscribers", async () => {
+      const result = (await client.callTool({
+        name: "list_subscribers",
+        arguments: {},
+      })) as ToolResult;
+
+      expect(result.content).toHaveLength(1);
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(2);
+      expect(data.results).toHaveLength(2);
+    });
+
+    it("filters by type", async () => {
+      const result = (await client.callTool({
+        name: "list_subscribers",
+        arguments: { type: "premium" },
+      })) as ToolResult;
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.results[0].type).toBe("premium");
+    });
+  });
+
+  describe("get_subscriber tool", () => {
+    it("retrieves a subscriber by id", async () => {
+      const result = (await client.callTool({
+        name: "get_subscriber",
+        arguments: { id_or_email: "sub_test123" },
+      })) as ToolResult;
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.id).toBe("sub_test123");
+    });
+
+    it("retrieves a subscriber by email", async () => {
+      const result = (await client.callTool({
+        name: "get_subscriber",
+        arguments: { id_or_email: "test@example.com" },
+      })) as ToolResult;
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.email_address).toBe("test@example.com");
+    });
+  });
 });
