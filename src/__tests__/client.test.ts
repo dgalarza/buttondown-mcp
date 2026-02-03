@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ButtondownClient } from "../client.js";
-import { mockEmail, mockAnalytics, mockSubscriber } from "./handlers.js";
+import { mockEmail, mockAnalytics, mockSubscriber, mockTag } from "./handlers.js";
 import "./setup.js";
 
 const client = new ButtondownClient("test-api-key");
@@ -105,7 +105,7 @@ describe("ButtondownClient", () => {
     });
   });
 
-  describe("listSubscribers", () => {
+describe("listSubscribers", () => {
     it("returns paginated list of subscribers", async () => {
       const response = await client.listSubscribers();
 
@@ -138,6 +138,75 @@ describe("ButtondownClient", () => {
 
     it("throws on not found", async () => {
       await expect(client.getSubscriber("notfound@example.com")).rejects.toThrow(
+        "Buttondown API error (404)"
+      );
+    });
+  });
+
+  describe("listTags", () => {
+    it("returns paginated list of tags", async () => {
+      const response = await client.listTags();
+
+      expect(response.count).toBe(2);
+      expect(response.results).toHaveLength(2);
+      expect(response.results[0].id).toBe(mockTag.id);
+      expect(response.results[0].name).toBe(mockTag.name);
+    });
+  });
+
+  describe("getTag", () => {
+    it("returns tag by id", async () => {
+      const tag = await client.getTag("tag_abc123");
+
+      expect(tag.id).toBe("tag_abc123");
+      expect(tag.name).toBe(mockTag.name);
+    });
+
+    it("throws on not found", async () => {
+      await expect(client.getTag("tag_notfound")).rejects.toThrow(
+        "Buttondown API error (404)"
+      );
+    });
+  });
+
+  describe("createTag", () => {
+    it("creates a new tag", async () => {
+      const tag = await client.createTag("New Tag");
+
+      expect(tag.id).toBe("tag_new123");
+      expect(tag.name).toBe("New Tag");
+    });
+
+    it("accepts optional parameters", async () => {
+      const tag = await client.createTag("Premium", {
+        color: "#FF0000",
+        description: "Premium subscribers",
+      });
+
+      expect(tag.name).toBe("Premium");
+      expect(tag.color).toBe("#FF0000");
+      expect(tag.description).toBe("Premium subscribers");
+    });
+  });
+
+  describe("updateTag", () => {
+    it("updates an existing tag", async () => {
+      const tag = await client.updateTag("tag_abc123", {
+        name: "Updated Tag",
+      });
+
+      expect(tag.id).toBe("tag_abc123");
+      expect(tag.name).toBe("Updated Tag");
+    });
+  });
+
+  describe("deleteTag", () => {
+    it("deletes a tag", async () => {
+      await expect(client.deleteTag("tag_abc123")).resolves.toBeUndefined();
+    });
+
+    it("throws on not found", async () => {
+      await expect(client.deleteTag("tag_notfound")).rejects.toThrow(
         "Buttondown API error (404)"
       );
     });
