@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ButtondownClient } from "../client.js";
-import { mockEmail, mockAnalytics } from "./handlers.js";
+import { mockEmail, mockAnalytics, mockSubscriber } from "./handlers.js";
 import "./setup.js";
 
 const client = new ButtondownClient("test-api-key");
@@ -100,6 +100,44 @@ describe("ButtondownClient", () => {
 
     it("throws on not found", async () => {
       await expect(client.getAnalytics("em_notfound")).rejects.toThrow(
+        "Buttondown API error (404)"
+      );
+    });
+  });
+
+  describe("listSubscribers", () => {
+    it("returns paginated list of subscribers", async () => {
+      const response = await client.listSubscribers();
+
+      expect(response.count).toBe(2);
+      expect(response.results).toHaveLength(2);
+      expect(response.results[0].id).toBe(mockSubscriber.id);
+    });
+
+    it("filters by type", async () => {
+      const response = await client.listSubscribers(undefined, "premium");
+
+      expect(response.results).toHaveLength(1);
+      expect(response.results[0].type).toBe("premium");
+    });
+  });
+
+  describe("getSubscriber", () => {
+    it("returns subscriber by id", async () => {
+      const subscriber = await client.getSubscriber("sub_abc123");
+
+      expect(subscriber.id).toBe("sub_abc123");
+      expect(subscriber.email_address).toBe(mockSubscriber.email_address);
+    });
+
+    it("returns subscriber by email", async () => {
+      const subscriber = await client.getSubscriber("test@example.com");
+
+      expect(subscriber.email_address).toBe("test@example.com");
+    });
+
+    it("throws on not found", async () => {
+      await expect(client.getSubscriber("notfound@example.com")).rejects.toThrow(
         "Buttondown API error (404)"
       );
     });

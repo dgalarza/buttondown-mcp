@@ -39,6 +39,44 @@ export const mockAnalytics = {
   social_mentions: 1,
 };
 
+export const mockSubscriber = {
+  id: "13121cd6-0dfc-424c-bb12-988b0a32fcb3",
+  creation_date: "2020-09-29T00:00:00+00:00",
+  avatar_url: "",
+  churn_date: null,
+  email_address: "telemachus@buttondown.email",
+  gift_subscription_message: "",
+  ip_address: null,
+  last_click_date: null,
+  last_open_date: null,
+  metadata: { name: "Telemachus" },
+  notes: "",
+  purchased_by: null,
+  purchased_message: null,
+  referral_code: "",
+  referrer_url: "",
+  risk_score: null,
+  secondary_id: 1,
+  source: "organic",
+  stripe_coupon: null,
+  stripe_customer_id: null,
+  subscriber_import_id: null,
+  tags: [],
+  transitions: [],
+  email_transitions: [],
+  firewall_reasons: [],
+  type: "regular",
+  undeliverability_date: null,
+  undeliverability_reason: null,
+  unsubscription_date: null,
+  unsubscription_reason: "",
+  upgrade_date: null,
+  utm_campaign: "",
+  utm_medium: "",
+  utm_source: "",
+  stripe_customer: null,
+};
+
 export const handlers = [
   // List emails
   http.get(`${API_BASE}/emails`, ({ request }) => {
@@ -114,5 +152,39 @@ export const handlers = [
     }
 
     return HttpResponse.json(mockAnalytics);
+  }),
+
+  // List subscribers
+  http.get(`${API_BASE}/subscribers`, ({ request }) => {
+    const url = new URL(request.url);
+    const type = url.searchParams.get("type");
+
+    const subscribers = type
+      ? [{ ...mockSubscriber, type }]
+      : [mockSubscriber, { ...mockSubscriber, id: "sub_456", type: "premium" }];
+
+    return HttpResponse.json({
+      count: subscribers.length,
+      next: null,
+      previous: null,
+      results: subscribers,
+    });
+  }),
+
+  // Get single subscriber
+  http.get(`${API_BASE}/subscribers/:idOrEmail`, ({ params }) => {
+    const { idOrEmail } = params;
+
+    if (idOrEmail === "notfound@example.com" || idOrEmail === "sub_notfound") {
+      return HttpResponse.json({ detail: "Not found." }, { status: 404 });
+    }
+
+    // If it looks like an email, use it as the email address
+    const isEmail = typeof idOrEmail === "string" && idOrEmail.includes("@");
+    return HttpResponse.json({
+      ...mockSubscriber,
+      id: isEmail ? mockSubscriber.id : idOrEmail,
+      email_address: isEmail ? idOrEmail : mockSubscriber.email_address,
+    });
   }),
 ];

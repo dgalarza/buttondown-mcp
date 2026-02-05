@@ -37,6 +37,44 @@ export interface EmailAnalytics {
   social_mentions: number;
 }
 
+export interface ButtondownSubscriber {
+  id: string;
+  creation_date: string;
+  avatar_url: string;
+  churn_date: string | null;
+  email_address: string;
+  gift_subscription_message: string;
+  ip_address: string | null;
+  last_click_date: string | null;
+  last_open_date: string | null;
+  metadata: Record<string, unknown>;
+  notes: string;
+  purchased_by: string | null;
+  purchased_message: string | null;
+  referral_code: string;
+  referrer_url: string;
+  risk_score: number | null;
+  secondary_id: number;
+  source: string;
+  stripe_coupon: string | null;
+  stripe_customer_id: string | null;
+  subscriber_import_id: string | null;
+  tags: string[];
+  transitions: unknown[];
+  email_transitions: unknown[];
+  firewall_reasons: string[];
+  type: string;
+  undeliverability_date: string | null;
+  undeliverability_reason: string | null;
+  unsubscription_date: string | null;
+  unsubscription_reason: string;
+  upgrade_date: string | null;
+  utm_campaign: string;
+  utm_medium: string;
+  utm_source: string;
+  stripe_customer: unknown | null;
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
@@ -152,5 +190,25 @@ export class ButtondownClient {
 
   async getAnalytics(id: string): Promise<EmailAnalytics> {
     return this.request<EmailAnalytics>(`/emails/${id}/analytics`);
+  }
+
+  async listSubscribers(
+    page?: number,
+    type?: string
+  ): Promise<PaginatedResponse<ButtondownSubscriber>> {
+    const params = new URLSearchParams();
+    if (page) params.append("page", page.toString());
+    if (type) params.append("type", type);
+
+    const query = params.toString();
+    return this.request<PaginatedResponse<ButtondownSubscriber>>(
+      `/subscribers${query ? `?${query}` : ""}`
+    );
+  }
+
+  async getSubscriber(idOrEmail: string): Promise<ButtondownSubscriber> {
+    return this.request<ButtondownSubscriber>(
+      `/subscribers/${encodeURIComponent(idOrEmail)}`
+    );
   }
 }
