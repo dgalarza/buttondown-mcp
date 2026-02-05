@@ -154,10 +154,10 @@ describe("MCP Server", () => {
     });
   });
 
-  describe("list_subscribers tool", () => {
-    it("lists all subscribers", async () => {
+  describe("list_tags tool", () => {
+    it("lists all tags", async () => {
       const result = (await client.callTool({
-        name: "list_subscribers",
+        name: "list_tags",
         arguments: {},
       })) as ToolResult;
 
@@ -166,37 +166,63 @@ describe("MCP Server", () => {
       expect(data.count).toBe(2);
       expect(data.results).toHaveLength(2);
     });
+  });
 
-    it("filters by type", async () => {
+  describe("get_tag tool", () => {
+    it("retrieves a tag by id", async () => {
       const result = (await client.callTool({
-        name: "list_subscribers",
-        arguments: { type: "premium" },
+        name: "get_tag",
+        arguments: { id: "tag_abc123" },
       })) as ToolResult;
 
       const data = JSON.parse(result.content[0].text);
-      expect(data.results[0].type).toBe("premium");
+      expect(data.id).toBe("tag_abc123");
+      expect(data.name).toBe("Newsletter");
     });
   });
 
-  describe("get_subscriber tool", () => {
-    it("retrieves a subscriber by id", async () => {
+  describe("create_tag tool", () => {
+    it("creates a new tag", async () => {
       const result = (await client.callTool({
-        name: "get_subscriber",
-        arguments: { id_or_email: "sub_test123" },
+        name: "create_tag",
+        arguments: {
+          name: "New Tag",
+          color: "#FF0000",
+          description: "A new tag",
+        },
       })) as ToolResult;
 
       const data = JSON.parse(result.content[0].text);
-      expect(data.id).toBe("sub_test123");
+      expect(data.name).toBe("New Tag");
+      expect(data.color).toBe("#FF0000");
+      expect(data.description).toBe("A new tag");
     });
+  });
 
-    it("retrieves a subscriber by email", async () => {
+  describe("update_tag tool", () => {
+    it("updates an existing tag", async () => {
       const result = (await client.callTool({
-        name: "get_subscriber",
-        arguments: { id_or_email: "test@example.com" },
+        name: "update_tag",
+        arguments: {
+          id: "tag_abc123",
+          name: "Updated Tag",
+        },
       })) as ToolResult;
 
       const data = JSON.parse(result.content[0].text);
-      expect(data.email_address).toBe("test@example.com");
+      expect(data.id).toBe("tag_abc123");
+      expect(data.name).toBe("Updated Tag");
+    });
+  });
+
+  describe("delete_tag tool", () => {
+    it("deletes a tag", async () => {
+      const result = (await client.callTool({
+        name: "delete_tag",
+        arguments: { id: "tag_abc123" },
+      })) as ToolResult;
+
+      expect(result.content[0].text).toBe("Tag tag_abc123 deleted successfully");
     });
   });
 });
