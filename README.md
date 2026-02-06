@@ -4,6 +4,8 @@ An MCP (Model Context Protocol) server for interacting with the [Buttondown](htt
 
 ## Tools
 
+### Emails
+
 | Tool | Description |
 |------|-------------|
 | `list_emails` | List emails with optional status filter (draft/scheduled/sent) |
@@ -13,6 +15,23 @@ An MCP (Model Context Protocol) server for interacting with the [Buttondown](htt
 | `send_draft` | Send a draft immediately |
 | `schedule_draft` | Schedule a draft for later |
 | `get_analytics` | Get open/click rates for sent emails |
+
+### Subscribers
+
+| Tool | Description |
+|------|-------------|
+| `list_subscribers` | List subscribers with optional type filter (regular/premium/churned/etc.) |
+| `get_subscriber` | Get subscriber details by ID or email address |
+
+### Tags
+
+| Tool | Description |
+|------|-------------|
+| `list_tags` | List all tags in your newsletter |
+| `get_tag` | Get tag details by ID |
+| `create_tag` | Create a new tag with optional color and description |
+| `update_tag` | Update an existing tag |
+| `delete_tag` | Delete a tag (subscribers remain unaffected) |
 
 ## Installation
 
