@@ -91,6 +91,32 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+export const SUBSCRIBER_TYPES = [
+  "regular",
+  "unactivated",
+  "unpaid",
+  "premium",
+  "gifted",
+  "churned",
+  "churning",
+  "past_due",
+  "paused",
+  "trialed",
+  "removed",
+  "blocked",
+  "complained",
+  "undeliverable",
+  "unsubscribed",
+  "upcoming",
+] as const;
+
+export type SubscriberType = (typeof SUBSCRIBER_TYPES)[number];
+
+export interface SubscriberStats {
+  total: number;
+  by_type: Record<SubscriberType, number>;
+}
+
 export class ButtondownClient {
   private apiKey: string;
 
@@ -268,6 +294,21 @@ async listSubscribers(
       method: "PATCH",
       body: JSON.stringify(updates),
     });
+  }
+
+  async getSubscriberStats(): Promise<SubscriberStats> {
+    const requests = SUBSCRIBER_TYPES.map(async (type) => {
+      const response = await this.request<PaginatedResponse<ButtondownSubscriber>>(
+        `/subscribers?type=${type}`
+      );
+      return [type, response.count] as const;
+    });
+
+    const results = await Promise.all(requests);
+    const by_type = Object.fromEntries(results) as Record<SubscriberType, number>;
+    const total = Object.values(by_type).reduce((sum, count) => sum + count, 0);
+
+    return { total, by_type };
   }
 
   async deleteTag(id: string): Promise<void> {

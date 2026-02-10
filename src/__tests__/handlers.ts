@@ -77,6 +77,28 @@ export const mockSubscriber = {
   stripe_customer: null,
 };
 
+export const mockSubscriberStats = {
+  total: 227,
+  by_type: {
+    regular: 150,
+    unactivated: 10,
+    unpaid: 5,
+    premium: 25,
+    gifted: 3,
+    churned: 8,
+    churning: 2,
+    past_due: 2,
+    paused: 1,
+    trialed: 4,
+    removed: 6,
+    blocked: 3,
+    complained: 1,
+    undeliverable: 3,
+    unsubscribed: 2,
+    upcoming: 2,
+  },
+};
+
 export const mockTag = {
   id: "tag_abc123",
   creation_date: "2024-01-01T00:00:00Z",
@@ -163,20 +185,46 @@ export const handlers = [
     return HttpResponse.json(mockAnalytics);
   }),
 
-// List subscribers
+  // List subscribers
   http.get(`${API_BASE}/subscribers`, ({ request }) => {
     const url = new URL(request.url);
     const type = url.searchParams.get("type");
 
-    const subscribers = type
-      ? [{ ...mockSubscriber, type }]
-      : [mockSubscriber, { ...mockSubscriber, id: "sub_456", type: "premium" }];
+    // For stats requests (type filter), return realistic counts
+    const statsCountByType: Record<string, number> = {
+      regular: 150,
+      unactivated: 10,
+      unpaid: 5,
+      premium: 25,
+      gifted: 3,
+      churned: 8,
+      churning: 2,
+      past_due: 2,
+      paused: 1,
+      trialed: 4,
+      removed: 6,
+      blocked: 3,
+      complained: 1,
+      undeliverable: 3,
+      unsubscribed: 2,
+      upcoming: 2,
+    };
+
+    if (type) {
+      const count = statsCountByType[type] ?? 1;
+      return HttpResponse.json({
+        count,
+        next: null,
+        previous: null,
+        results: [{ ...mockSubscriber, type }],
+      });
+    }
 
     return HttpResponse.json({
-      count: subscribers.length,
+      count: 2,
       next: null,
       previous: null,
-      results: subscribers,
+      results: [mockSubscriber, { ...mockSubscriber, id: "sub_456", type: "premium" }],
     });
   }),
 

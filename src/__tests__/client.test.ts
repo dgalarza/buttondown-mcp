@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ButtondownClient } from "../client.js";
-import { mockEmail, mockAnalytics, mockSubscriber, mockTag } from "./handlers.js";
+import { mockEmail, mockAnalytics, mockSubscriber, mockSubscriberStats, mockTag } from "./handlers.js";
 import "./setup.js";
 
 const client = new ButtondownClient("test-api-key");
@@ -119,6 +119,28 @@ describe("listSubscribers", () => {
 
       expect(response.results).toHaveLength(1);
       expect(response.results[0].type).toBe("premium");
+    });
+  });
+
+  describe("getSubscriberStats", () => {
+    it("returns aggregate stats by subscriber type", async () => {
+      const stats = await client.getSubscriberStats();
+
+      expect(stats.total).toBe(mockSubscriberStats.total);
+      expect(stats.by_type.regular).toBe(mockSubscriberStats.by_type.regular);
+      expect(stats.by_type.premium).toBe(mockSubscriberStats.by_type.premium);
+      expect(stats.by_type.churned).toBe(mockSubscriberStats.by_type.churned);
+    });
+
+    it("includes all subscriber types", async () => {
+      const stats = await client.getSubscriberStats();
+      const types = Object.keys(stats.by_type);
+
+      expect(types).toContain("regular");
+      expect(types).toContain("premium");
+      expect(types).toContain("churned");
+      expect(types).toContain("unactivated");
+      expect(types).toHaveLength(16);
     });
   });
 
