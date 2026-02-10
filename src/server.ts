@@ -163,11 +163,16 @@ export function createServer() {
           "premium",
           "gifted",
           "churned",
+          "churning",
           "past_due",
+          "paused",
           "trialed",
           "removed",
-          "spam_complaint",
+          "blocked",
+          "complained",
           "undeliverable",
+          "unsubscribed",
+          "upcoming",
         ])
         .optional()
         .describe("Filter subscribers by type"),
@@ -175,7 +180,36 @@ export function createServer() {
     async ({ page, type }) => {
       const client = new ButtondownClient(getApiKey());
       const response = await client.listSubscribers(page, type);
-      return jsonResponse(response);
+      const trimmed = {
+        count: response.count,
+        next: response.next,
+        previous: response.previous,
+        results: response.results.map((s) => ({
+          id: s.id,
+          email_address: s.email_address,
+          creation_date: s.creation_date,
+          type: s.type,
+          source: s.source,
+          tags: s.tags,
+          notes: s.notes,
+          utm_source: s.utm_source,
+          utm_medium: s.utm_medium,
+          utm_campaign: s.utm_campaign,
+        })),
+      };
+      return jsonResponse(trimmed);
+    }
+  );
+
+  // get_subscriber_stats tool
+  server.tool(
+    "get_subscriber_stats",
+    "Get aggregate subscriber statistics with counts broken down by type (regular, premium, churned, etc.). Much more efficient than listing all subscribers.",
+    {},
+    async () => {
+      const client = new ButtondownClient(getApiKey());
+      const stats = await client.getSubscriberStats();
+      return jsonResponse(stats);
     }
   );
 

@@ -200,6 +200,49 @@ describe("list_subscribers tool", () => {
     });
   });
 
+  describe("get_subscriber_stats tool", () => {
+    it("returns aggregate subscriber stats", async () => {
+      const result = (await client.callTool({
+        name: "get_subscriber_stats",
+        arguments: {},
+      })) as ToolResult;
+
+      const data = JSON.parse(result.content[0].text);
+      expect(data.total).toBe(227);
+      expect(data.by_type.regular).toBe(150);
+      expect(data.by_type.premium).toBe(25);
+      expect(data.by_type.churned).toBe(8);
+    });
+  });
+
+  describe("list_subscribers tool (trimmed)", () => {
+    it("returns only essential subscriber fields", async () => {
+      const result = (await client.callTool({
+        name: "list_subscribers",
+        arguments: {},
+      })) as ToolResult;
+
+      const data = JSON.parse(result.content[0].text);
+      const subscriber = data.results[0];
+
+      // Essential fields are present
+      expect(subscriber.id).toBeDefined();
+      expect(subscriber.email_address).toBeDefined();
+      expect(subscriber.type).toBeDefined();
+      expect(subscriber.creation_date).toBeDefined();
+      expect(subscriber.tags).toBeDefined();
+      expect(subscriber.source).toBeDefined();
+
+      // Heavy fields are stripped
+      expect(subscriber.transitions).toBeUndefined();
+      expect(subscriber.email_transitions).toBeUndefined();
+      expect(subscriber.stripe_customer).toBeUndefined();
+      expect(subscriber.stripe_customer_id).toBeUndefined();
+      expect(subscriber.metadata).toBeUndefined();
+      expect(subscriber.ip_address).toBeUndefined();
+    });
+  });
+
   describe("list_tags tool", () => {
     it("lists all tags", async () => {
       const result = (await client.callTool({
